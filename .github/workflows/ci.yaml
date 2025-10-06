@@ -28,7 +28,7 @@ jobs:
         run: |
           IMAGE_NAME=my-app
           TAG=${GITHUB_REF#refs/tags/}
-          FULL_IMAGE=REGION-docker.pkg.dev/PROJECT_ID/my-docker-repo/$IMAGE_NAME:$TAG
+          FULL_IMAGE=us-central1-docker.pkg.dev/rock-figure-384119/my-docker-repo/$IMAGE_NAME:${TAG,,}
           docker build -t $FULL_IMAGE .
           docker push $FULL_IMAGE
 
