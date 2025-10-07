@@ -17,18 +17,22 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker REGION-docker.pkg.dev
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
       - name: Build and push Docker image
+        env:
+          PROJECT_ID: rock-figure-384119
+          REGION: us-central1
         run: |
           IMAGE_NAME=my-app
           TAG=${GITHUB_REF#refs/tags/}
-          FULL_IMAGE=us-central1-docker.pkg.dev/rock-figure-384119/my-docker-repo/$IMAGE_NAME:${TAG,,}
+          FULL_IMAGE=$REGION-docker.pkg.dev/$PROJECT_ID/my-docker-repo/$IMAGE_NAME:${TAG,,}
+          echo "Building and pushing image: $FULL_IMAGE"
           docker build -t $FULL_IMAGE .
           docker push $FULL_IMAGE
 
@@ -42,7 +46,7 @@ jobs:
       - name: Update image tag in values.yaml
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          sed -i "s|tag: .*|tag: $TAG|" my-charts/values.yaml
+          sed -i "s|tag: .*|tag: ${TAG,,}|" my-charts/values.yaml
 
       - name: Commit and push changes
         run: |
@@ -50,5 +54,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add values.yaml
-          git commit -m "Update image tag to $TAG"
+          git commit -m "Update image tag to ${TAG,,}"
           git push origin main
